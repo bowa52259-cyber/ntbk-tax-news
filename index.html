@@ -720,7 +720,7 @@
     <span class="status-dot"></span>
     <span>系統就緒</span>
     &nbsp;|&nbsp;
-    <span id="modelLabel">Gemini 2.0 Flash · 新聞稿AI</span>
+    <span id="modelLabel">Gemini 2.0 Flash · Google OAuth</span>
   </div>
 </header>
 
@@ -737,7 +737,7 @@
 
       <!-- API KEY -->
       <div class="field-group">
-        <label class="field-label">🔑 Gemini API Key 設定</label>
+        <label class="field-label">👤 登入狀態</label>
         <div id="keyStatus" style="font-size:12px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;line-height:1.6;">
           載入中...
         </div>
@@ -895,114 +895,213 @@
 // ====== SITE CONFIG ======
 const SITE_CONFIG = {
   siteName: '財政部高雄國稅局新聞稿AI生成系統',
-  version: '2.1'
+  version: '3.0',
+  // Google OAuth Client ID — 從 Google Cloud Console 取得
+  // 格式：XXXXXXXXXX-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com
+  googleClientId: '240170147041-nbf6pe6p59s93e0chsfp11kuenvku57q.apps.googleusercontent.com'
 };
 
-// ── API Key 管理：從 localStorage 讀取，首次使用彈出設定視窗 ──
-function getApiKey() {
-  return localStorage.getItem('ntbk_gemini_key') || '';
-}
-function saveApiKey(key) {
-  localStorage.setItem('ntbk_gemini_key', key.trim());
-}
-function clearApiKey() {
-  localStorage.removeItem('ntbk_gemini_key');
-}
+// ====== GOOGLE OAUTH + GEMINI 個人配額系統 ======
+let currentUser = null;
+let accessToken = null;
 
-// ── 首次載入：若無 Key 則顯示設定視窗 ──
+// ── 頁面載入：初始化 Google Identity Services ──
 window.addEventListener('DOMContentLoaded', () => {
-  updateKeyStatus();
-  if (!getApiKey()) {
-    setTimeout(showApiKeyModal, 500);
-  }
+  // 載入 Google Identity Services script
+  const script = document.createElement('script');
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.onload = initGoogleAuth;
+  script.onerror = () => showAuthError('Google 登入服務載入失敗，請重新整理頁面');
+  document.head.appendChild(script);
 });
 
-function updateKeyStatus() {
-  const key = getApiKey();
-  const statusEl = document.getElementById('keyStatus');
-  if (!statusEl) return;
-  if (key) {
-    const masked = key.substring(0,8) + '••••••••' + key.slice(-4);
-    statusEl.innerHTML = `✅ API Key 已設定 <span style="font-family:monospace;font-size:11px;color:var(--text-faint)">${masked}</span> <button onclick="showApiKeyModal()" style="margin-left:8px;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);cursor:pointer;color:var(--text-muted)">變更</button>`;
-    statusEl.style.color = 'var(--success)';
+function initGoogleAuth() {
+  if (SITE_CONFIG.googleClientId === 'GOOGLE_CLIENT_ID_HERE') {
+    // 尚未設定 Client ID — 顯示設定提示（管理員用）
+    showAdminSetupBanner();
+    return;
+  }
+  // 若已有儲存的 token 嘗試自動登入
+  const savedToken = sessionStorage.getItem('ntbk_access_token');
+  const savedUser = sessionStorage.getItem('ntbk_user');
+  if (savedToken && savedUser) {
+    accessToken = savedToken;
+    currentUser = JSON.parse(savedUser);
+    renderLoggedIn();
   } else {
-    statusEl.innerHTML = `⚠️ 尚未設定 API Key <button onclick="showApiKeyModal()" style="margin-left:8px;font-size:11px;padding:2px 8px;border:1px solid var(--accent);border-radius:4px;background:var(--accent-light);cursor:pointer;color:var(--accent-dark);font-weight:700">立即設定</button>`;
-    statusEl.style.color = 'var(--error)';
+    renderLoginScreen();
   }
 }
 
-function showApiKeyModal() {
-  const existing = document.getElementById('apiKeyModal');
-  if (existing) existing.remove();
-  
-  const modal = document.createElement('div');
-  modal.id = 'apiKeyModal';
-  modal.style.cssText = `
-    position:fixed;inset:0;z-index:999;
-    background:rgba(0,0,0,0.5);
+// ── 登入畫面 ──
+function renderLoginScreen() {
+  const app = document.querySelector('.main');
+  app.style.display = 'none';
+
+  const loginScreen = document.createElement('div');
+  loginScreen.id = 'loginScreen';
+  loginScreen.style.cssText = `
+    position:fixed;inset:0;top:56px;
+    background:var(--bg);
     display:flex;align-items:center;justify-content:center;
-    font-family:'Noto Sans TC',sans-serif;
+    z-index:500;
   `;
-  modal.innerHTML = `
-    <div style="background:#fff;border-radius:16px;padding:32px;width:460px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <div style="width:40px;height:40px;background:#f5e9cc;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">🔑</div>
-        <div>
-          <div style="font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;color:#1a1612">設定 Gemini API Key</div>
-          <div style="font-size:12px;color:#a0937f;margin-top:2px">儲存於本機瀏覽器，不會上傳至任何伺服器</div>
-        </div>
+  loginScreen.innerHTML = `
+    <div style="background:#fff;border-radius:20px;padding:48px 40px;width:400px;max-width:90vw;
+      box-shadow:0 20px 60px rgba(0,0,0,0.15);text-align:center;">
+      <div style="font-size:40px;margin-bottom:16px;">📰</div>
+      <div style="font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700;
+        color:var(--accent-dark);margin-bottom:8px;">財政部高雄國稅局</div>
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:32px;line-height:1.6;">
+        新聞稿 AI 生成系統<br>
+        <span style="font-size:12px;color:var(--text-faint);">請使用 Google 帳號登入，系統將使用您個人的 Gemini 免費配額</span>
       </div>
-      
-      <div style="background:#f5f3ee;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#6b5e4e;line-height:1.7;">
-        📌 <strong>如何取得 API Key？</strong><br>
-        1. 前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#8b6914">aistudio.google.com/app/apikey</a><br>
-        2. 點「Create API key」<br>
-        3. 複製 Key（格式：AIzaSy 開頭，約39字元）
-      </div>
-      
-      <label style="font-size:12px;font-weight:700;color:#6b5e4e;letter-spacing:0.5px;text-transform:uppercase;">API Key</label>
-      <input id="modalApiKeyInput" type="password" 
-        placeholder="AIzaSy..." 
-        style="width:100%;margin-top:6px;padding:12px;border:1.5px solid #d8d0c4;border-radius:8px;font-family:monospace;font-size:13px;outline:none;box-sizing:border-box;"
-        onkeydown="if(event.key==='Enter')saveApiKeyFromModal()"
-      />
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b5e4e;cursor:pointer;">
-          <input type="checkbox" onchange="document.getElementById('modalApiKeyInput').type=this.checked?'text':'password'"> 顯示 Key
-        </label>
-        <span id="modalKeyError" style="font-size:11px;color:#9b2226;"></span>
-      </div>
-      
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button onclick="saveApiKeyFromModal()" 
-          style="flex:1;background:#5c4509;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;">
-          ✓ 儲存並開始使用
-        </button>
-        ${getApiKey() ? `<button onclick="document.getElementById('apiKeyModal').remove()" 
-          style="padding:12px 16px;border:1.5px solid #d8d0c4;border-radius:8px;background:#f5f3ee;cursor:pointer;font-size:13px;font-family:'Noto Sans TC',sans-serif;">
-          取消
-        </button>` : ''}
+      <div id="googleSignInBtn"></div>
+      <div id="loginError" style="margin-top:16px;font-size:12px;color:var(--error);display:none;"></div>
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);
+        font-size:11px;color:var(--text-faint);line-height:1.7;">
+        🔒 僅使用您的 Google 帳號識別身份<br>
+        不存取您的 Gmail 或其他個人資料<br>
+        API 呼叫使用您個人免費配額，管理員不負擔費用
       </div>
     </div>
   `;
-  document.body.appendChild(modal);
-  setTimeout(() => document.getElementById('modalApiKeyInput').focus(), 100);
+  document.body.appendChild(loginScreen);
+
+  // 渲染 Google 登入按鈕
+  google.accounts.oauth2.initTokenClient({
+    client_id: SITE_CONFIG.googleClientId,
+    scope: 'https://www.googleapis.com/auth/generative-language.retriever openid email profile',
+    callback: handleGoogleToken,
+  });
+
+  // 使用 GIS 的 renderButton 或自訂按鈕
+  google.accounts.id.initialize({
+    client_id: SITE_CONFIG.googleClientId,
+    callback: handleGoogleIdToken,
+    auto_select: false,
+  });
+  google.accounts.id.renderButton(
+    document.getElementById('googleSignInBtn'),
+    {
+      theme: 'outline',
+      size: 'large',
+      text: 'signin_with',
+      shape: 'rectangular',
+      locale: 'zh-TW',
+      width: 280,
+    }
+  );
 }
 
-function saveApiKeyFromModal() {
-  const input = document.getElementById('modalApiKeyInput');
-  const key = input.value.trim();
-  const errEl = document.getElementById('modalKeyError');
-  
-  if (!key) { errEl.textContent = '請輸入 API Key'; return; }
-  if (!key.startsWith('AIza') || key.length < 30) { 
-    errEl.textContent = 'Key 格式不正確，應以 AIza 開頭'; return; 
+// ── 處理 Google ID Token（登入後取得用戶資訊 + 請求 Access Token）──
+function handleGoogleIdToken(response) {
+  // 解析 JWT payload 取得用戶資訊
+  const payload = JSON.parse(atob(response.credential.split('.')[1]));
+  currentUser = {
+    name: payload.name,
+    email: payload.email,
+    picture: payload.picture,
+  };
+
+  // 取得 Access Token 用於呼叫 Gemini API
+  const tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: SITE_CONFIG.googleClientId,
+    scope: 'https://generativelanguage.googleapis.com/v1beta/models:generateContent',
+    callback: (tokenResponse) => {
+      if (tokenResponse.error) {
+        showLoginError('無法取得 API 授權，請重試');
+        return;
+      }
+      accessToken = tokenResponse.access_token;
+      sessionStorage.setItem('ntbk_access_token', accessToken);
+      sessionStorage.setItem('ntbk_user', JSON.stringify(currentUser));
+      document.getElementById('loginScreen')?.remove();
+      document.querySelector('.main').style.display = '';
+      renderLoggedIn();
+      showToast(`✅ 歡迎，${currentUser.name}！`);
+    },
+  });
+  tokenClient.requestAccessToken({ prompt: '' });
+}
+
+function handleGoogleToken(response) {
+  if (response.error) {
+    showLoginError('登入失敗：' + response.error);
   }
-  
-  saveApiKey(key);
-  document.getElementById('apiKeyModal').remove();
-  updateKeyStatus();
-  showToast('✅ API Key 已儲存，現在可以產出新聞稿了！');
+}
+
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+// ── 登入後：渲染用戶資訊到左側面板 ──
+function renderLoggedIn() {
+  const keyStatusEl = document.getElementById('keyStatus');
+  if (!keyStatusEl) return;
+  keyStatusEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="${currentUser.picture}" 
+        style="width:28px;height:28px;border-radius:50%;border:2px solid var(--accent-light);" 
+        onerror="this.style.display='none'">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;font-weight:700;color:var(--success);">✅ 已登入</div>
+        <div style="font-size:11px;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          ${currentUser.name} (${currentUser.email})
+        </div>
+      </div>
+      <button onclick="signOut()" 
+        style="font-size:11px;padding:3px 8px;border:1px solid var(--border);
+        border-radius:4px;background:var(--bg);cursor:pointer;color:var(--text-muted);
+        white-space:nowrap;">登出</button>
+    </div>
+    <div style="margin-top:6px;font-size:10px;color:var(--text-faint);">
+      🔋 使用您的個人 Gemini 免費配額（每日 1,500 次）
+    </div>
+  `;
+}
+
+// ── 登出 ──
+function signOut() {
+  if (confirm('確定要登出嗎？')) {
+    sessionStorage.removeItem('ntbk_access_token');
+    sessionStorage.removeItem('ntbk_user');
+    accessToken = null;
+    currentUser = null;
+    google.accounts.id.disableAutoSelect();
+    location.reload();
+  }
+}
+
+// ── API Key 相關函數（保留介面相容性，改用 OAuth token）──
+function getApiKey() { return accessToken || ''; }
+function updateKeyStatus() { if (currentUser) renderLoggedIn(); }
+
+// ── 管理員尚未設定 Client ID 時的提示橫幅 ──
+function showAdminSetupBanner() {
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    position:fixed;top:56px;left:0;right:0;z-index:200;
+    background:#9b2226;color:#fff;padding:12px 24px;
+    font-size:13px;font-family:'Noto Sans TC',sans-serif;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  `;
+  banner.innerHTML = `
+    <span>⚠️ <strong>管理員設定提示</strong>：請至 Google Cloud Console 建立 OAuth Client ID，
+    填入 index.html 第 SITE_CONFIG.googleClientId 欄位後重新部署。</span>
+    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" 
+      style="color:#ffd700;text-decoration:underline;white-space:nowrap;">
+      前往設定 →
+    </a>
+  `;
+  document.body.appendChild(banner);
+  document.querySelector('.main').style.marginTop = '50px';
+}
+
+function showAuthError(msg) {
+  console.error(msg);
 }
 
 // ====== 內建知識庫（高雄國稅局常用法條 & 新聞稿範本） ======
@@ -1302,12 +1401,16 @@ function handleChatKey(e) {
   }
 }
 
-// ====== API CALL — Gemini Direct (for GitHub Pages deployment) ======
+// ====== API CALL — Gemini with Google OAuth Token ======
 async function callGemini(apiKey, systemPrompt, userPrompt) {
-  const key = getApiKey();
-  if (!key) { showApiKeyModal(); throw new Error('請先設定 Gemini API Key'); }
+  const token = accessToken;
+  if (!token) {
+    renderLoginScreen();
+    throw new Error('請先登入 Google 帳號');
+  }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+  // 使用 Bearer token（OAuth）呼叫 Gemini — 使用個人配額，無需 API Key
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
   const body = {
     system_instruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
@@ -1318,7 +1421,10 @@ async function callGemini(apiKey, systemPrompt, userPrompt) {
   try {
     resp = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify(body)
     });
   } catch (networkErr) {
@@ -1328,9 +1434,15 @@ async function callGemini(apiKey, systemPrompt, userPrompt) {
   if (!resp.ok) {
     let errMsg = 'HTTP ' + resp.status;
     try { const e = await resp.json(); errMsg = e.error?.message || errMsg; } catch(e) {}
-    if (resp.status === 400) errMsg = 'API Key 格式錯誤 (400)';
-    if (resp.status === 403) errMsg = 'API Key 無效或未啟用 Gemini API (403)';
+    if (resp.status === 401) {
+      // Token 過期，重新登入
+      sessionStorage.removeItem('ntbk_access_token');
+      accessToken = null;
+      renderLoginScreen();
+      errMsg = '登入已過期，請重新登入';
+    }
     if (resp.status === 429) errMsg = '請求過頻，請稍後再試 (429)';
+    if (resp.status === 403) errMsg = '您的 Google 帳號尚未啟用 Gemini API，請至 aistudio.google.com 確認';
     throw new Error(errMsg);
   }
 
