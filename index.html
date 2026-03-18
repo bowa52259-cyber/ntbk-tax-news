@@ -720,7 +720,7 @@
     <span class="status-dot"></span>
     <span>系統就緒</span>
     &nbsp;|&nbsp;
-    <span id="modelLabel">Gemini 1.5 Flash · 新聞稿AI</span>
+    <span id="modelLabel">Gemini 2.0 Flash · 新聞稿AI</span>
   </div>
 </header>
 
@@ -740,7 +740,7 @@
         <label class="field-label">ℹ️ AI 模型說明 <span class="hint">（Gemini API，管理員已預設）</span></label>
         <input type="text" id="apiKey" placeholder="（Gemini API Key 已由管理員內建，使用者無需設定）" autocomplete="off" style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;background:var(--surface-2);color:var(--text-faint);" readonly />
         <div class="gemini-note">
-          ✅ 已整合 <strong>Gemini 1.5 Flash</strong>，使用者無需設定 API Key。<br>
+          ✅ 已整合 <strong>Gemini 2.0 Flash</strong>，使用者無需設定 API Key。<br>
           📚 <strong>內建知識庫</strong>：高雄國稅局常用法條、新聞稿範本、用語對照已預載。<br>
           🔗 NotebookLM 內容：請從筆記本對話中複製相關段落貼入「補充參考資料」欄位，即可納入 AI 參考範圍。
         </div>
@@ -1229,7 +1229,7 @@ async function callGemini(apiKey, systemPrompt, userPrompt) {
   const key = apiKey || SITE_CONFIG.geminiApiKey;
   if (!key) throw new Error('尚未設定 Gemini API Key，請聯絡系統管理員');
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
   const body = {
     system_instruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
