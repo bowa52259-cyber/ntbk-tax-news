@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>財政部高雄國稅局 · 新聞稿AI生成系統</title>
+  <!-- PDF.js for client-side PDF text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #f5f3ee;
+    --surface: #ffffff;
+    --surface-2: #f0ede6;
+    --border: #d8d0c4;
+    --border-focus: #8b6914;
+    --accent: #8b6914;
+    --accent-dark: #5c4509;
+    --accent-light: #f5e9cc;
+    --text: #1a1612;
+    --text-muted: #6b5e4e;
+    --text-faint: #a0937f;
+    --success: #2d6a4f;
+    --error: #9b2226;
+    --tag-bg: #e8e0d0;
+    --shadow: 0 2px 12px rgba(100,80,40,0.10);
+    --shadow-lg: 0 8px 32px rgba(100,80,40,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Sans TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--accent-dark);
+    color: #fff;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-logo .badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    letter-spacing: 1px;
+  }
+  .header-title {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #4ade80;
+    display: inline-block;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 0;
+    flex: 1;
+    height: calc(100vh - 56px);
+    overflow: hidden;
+  }
+
+  /* LEFT PANEL */
+  .left-panel {
+    background: var(--surface);
+    border-right: 1.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-header {
+    padding: 18px 24px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+  }
+  .panel-header h2 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-dark);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-header p {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+
+  .left-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .left-scroll::-webkit-scrollbar { width: 5px; }
+  .left-scroll::-webkit-scrollbar-track { background: transparent; }
+  .left-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .field-label .required {
+    color: var(--error);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .field-label .hint {
+    font-size: 10px;
+    color: var(--text-faint);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  select, textarea, input[type=text] {
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+  }
+  select:focus, textarea:focus, input[type=text]:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(139,105,20,0.12);
+  }
+  textarea {
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  /* UNIT SELECTOR */
+  .unit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .unit-btn {
+    padding: 8px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 7px;
+    background: var(--bg);
+    font-size: 12px;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .unit-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .unit-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent-dark); font-weight: 700; }
+
+  /* FILE UPLOAD */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 18px 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .upload-zone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icon { font-size: 28px; margin-bottom: 6px; }
+  .upload-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .upload-text strong { color: var(--accent-dark); }
+  .file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+  .file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: var(--accent-dark);
+  }
+  .file-item .remove-file {
+    margin-left: auto;
+    cursor: pointer;
+    color: var(--text-faint);
+    font-size: 14px;
+    line-height: 1;
+    padding: 0 2px;
+  }
+  .file-item .remove-file:hover { color: var(--error); }
+
+  /* TONE CHIPS */
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 99px;
+    border: 1.5px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg);
+    cursor: pointer;
+    transition: all 0.18s;
+    font-family: 'Noto Sans TC', sans-serif;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.active { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 700; }
+
+  /* GENERATE BUTTON */
+  .generate-bar {
+    padding: 16px 24px;
+    border-top: 1.5px solid var(--border);
+    background: var(--surface);
+  }
+  .btn-generate {
+    width: 100%;
+    background: var(--accent-dark);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-family: 'Noto Serif TC', serif;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-generate:hover { background: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-1px); }
+  .btn-generate:active { transform: translateY(0); }
+  .btn-generate:disabled { background: var(--text-faint); cursor: not-allowed; transform: none; }
+  .btn-generate .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .btn-generate.loading .spinner { display: block; }
+  .btn-generate.loading .btn-text { opacity: 0.7; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    overflow: hidden;
+  }
+
+  /* TITLE SECTION */
+  .title-section {
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+    padding: 20px 32px 18px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .title-candidates {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .title-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--bg);
+  }
+  .title-option:hover { border-color: var(--accent); background: var(--accent-light); }
+  .title-option.selected { border-color: var(--accent); background: var(--accent-light); }
+  .title-num {
+    min-width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.18s;
+  }
+  .title-option.selected .title-num { background: var(--accent); color: #fff; }
+  .title-text {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.5;
+    flex: 1;
+  }
+  .title-empty {
+    color: var(--text-faint);
+    font-size: 13px;
+    padding: 16px;
+    text-align: center;
+    font-style: italic;
+  }
+
+  /* CONTENT SECTION */
+  .content-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 20px 32px 0;
+    gap: 14px;
+  }
+  .content-area-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  .content-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    border-radius: 12px 12px 0 0;
+  }
+  .toolbar-btn {
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .toolbar-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent-dark); }
+  .toolbar-sep { width: 1px; height: 16px; background: var(--border); margin: 0 2px; }
+  .toolbar-right { margin-left: auto; }
+  .word-count { font-size: 11px; color: var(--text-faint); font-family: 'JetBrains Mono', monospace; }
+
+  .content-display {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--text);
+    white-space: pre-wrap;
+    outline: none;
+  }
+  .content-display::-webkit-scrollbar { width: 5px; }
+  .content-display::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .content-display.editable { cursor: text; }
+  .content-display.editable:focus { box-shadow: none; }
+  .content-placeholder {
+    color: var(--text-faint);
+    font-style: italic;
+    font-size: 13px;
+    pointer-events: none;
+    line-height: 2;
+  }
+
+  /* CHAT / REVISION SECTION */
+  .chat-section {
+    padding: 14px 32px 16px;
+    border-top: 1.5px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat-history {
+    max-height: 120px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .chat-history::-webkit-scrollbar { width: 4px; }
+  .chat-history::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  .chat-msg {
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    max-width: 85%;
+  }
+  .chat-msg.user {
+    background: var(--accent-dark);
+    color: #fff;
+    align-self: flex-end;
+    border-radius: 8px 8px 2px 8px;
+  }
+  .chat-msg.ai {
+    background: var(--surface-2);
+    color: var(--text-muted);
+    align-self: flex-start;
+    border-radius: 8px 8px 8px 2px;
+    border: 1px solid var(--border);
+  }
+
+  .chat-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .chat-input {
+    flex: 1;
+    min-height: 38px;
+    max-height: 90px;
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: 'Noto Sans TC', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s;
+    line-height: 1.5;
+  }
+  .chat-input:focus { border-color: var(--border-focus); }
+  .chat-input::placeholder { color: var(--text-faint); font-size: 12px; }
+  .btn-send {
+    height: 38px;
+    min-width: 38px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.18s;
+    padding: 0 12px;
+  }
+  .btn-send:hover { background: var(--accent-dark); }
+  .btn-send:disabled { background: var(--text-faint); cursor: not-allowed; }
+
+  .quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .quick-btn {
+    padding: 4px 10px;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: 'Noto Sans TC', sans-serif;
+    transition: all 0.15s;
+  }
+  .quick-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text-faint);
+    padding: 40px;
+    text-align: center;
+  }
+  .empty-icon { font-size: 48px; opacity: 0.5; }
+  .empty-state h3 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 16px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .empty-state p { font-size: 12px; line-height: 1.7; max-width: 280px; }
+
+  /* STRUCTURE DIAGRAM (collapsible) */
+  .structure-box {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .structure-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 14px;
+    background: var(--surface-2);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .structure-toggle .arrow { transition: transform 0.2s; }
+  .structure-toggle.open .arrow { transform: rotate(180deg); }
+  .structure-content {
+    padding: 12px 14px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .structure-content.visible { display: flex; }
+  .struct-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding: 3px 0;
+    border-bottom: 1px dashed var(--border);
+  }
+  .struct-item:last-child { border-bottom: none; }
+  .struct-num {
+    min-width: 18px; height: 18px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent-dark);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: 'Noto Sans TC', sans-serif;
+    box-shadow: var(--shadow-lg);
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* LOADING OVERLAY */
+  .loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(245,243,238,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 10;
+    border-radius: 10px;
+    backdrop-filter: blur(2px);
+  }
+  .loading-overlay.show { display: flex; }
+  .loading-spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .loading-text { font-size: 13px; color: var(--text-muted); font-family: 'Noto Sans TC', sans-serif; }
+
+  /* GEMINI NOTE */
+  .gemini-note {
+    padding: 8px 12px;
+    background: linear-gradient(90deg, rgba(66,133,244,0.08), rgba(234,67,53,0.06));
+    border: 1px solid rgba(66,133,244,0.2);
+    border-radius: 7px;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    line-height: 1.4;
+  }
+
+  /* SCROLLBAR GLOBAL */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; height: auto; overflow: visible; }
+    .left-panel, .right-panel { height: auto; }
+    .content-area-wrapper { height: 400px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">
+    <span class="badge">GOV</span>
+    <span class="header-title">財政部高雄國稅局 · 新聞稿AI生成系統</span>
+  </div>
+  <div class="header-right">
+    <span class="status-dot"></span>
+    <span>系統就緒</span>
+    &nbsp;|&nbsp;
+    <span id="modelLabel">Gemini 1.5 Flash · 新聞稿AI</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ====== LEFT PANEL ====== -->
+  <div class="left-panel">
+    <div class="panel-header">
+      <h2>📝 新聞稿輸入區</h2>
+      <p>填寫欲撰寫新聞稿的資訊，可上傳參考法條或相關文件輔助AI生成。</p>
+    </div>
+
+    <div class="left-scroll">
+
+      <!-- API KEY -->
+      <div class="field-group">
+        <label class="field-label">ℹ️ AI 模型說明 <span class="hint">（Gemini API，管理員已預設）</span></label>
+        <input type="text" id="apiKey" placeholder="（Gemini API Key 已由管理員內建，使用者無需設定）" autocomplete="off" style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;background:var(--surface-2);color:var(--text-faint);" readonly />
+        <div class="gemini-note">
+          ✅ 已整合 <strong>Gemini 1.5 Flash</strong>，使用者無需設定 API Key。<br>
+          📚 <strong>內建知識庫</strong>：高雄國稅局常用法條、新聞稿範本、用語對照已預載。<br>
+          🔗 NotebookLM 內容：請從筆記本對話中複製相關段落貼入「補充參考資料」欄位，即可納入 AI 參考範圍。
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT INPUT -->
+      <div class="field-group">
+        <label class="field-label">📋 新聞稿主題與主要內容 <span class="required">*</span></label>
+        <textarea id="mainContent" rows="6" placeholder="請描述：
+• 新聞稿主題（例：個人出售繼承房地適用房地合一稅）
+• 適用法條（例：所得稅法第14條之4）
+• 案例說明（如有）
+• 重要數字或期限
+• 連絡人資訊"></textarea>
+      </div>
+
+      <!-- REFERENCE / LAW -->
+      <div class="field-group">
+        <label class="field-label">📚 補充參考資料 <span class="hint">（NotebookLM內容、法條全文、問答等）</span></label>
+        <textarea id="refContent" rows="4" placeholder="可貼入：
+• NotebookLM 筆記本相關片段
+• 完整法條文字
+• 過往問答紀錄
+• 相關規定或函釋"></textarea>
+      </div>
+
+      <!-- FILE UPLOAD -->
+      <div class="field-group">
+        <label class="field-label">📎 上傳參考文件</label>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fileInput" multiple accept=".pdf,.txt,.docx,.xlsx,.csv" />
+          <div class="upload-icon">📂</div>
+          <div class="upload-text">
+            <strong>點擊選擇</strong>或拖放檔案至此<br>
+            <span style="font-size:10px;color:var(--text-faint)">支援 PDF（自動解析文字）、TXT、CSV；DOCX/XLSX 請另存 TXT</span>
+          </div>
+        </div>
+        <div class="file-list" id="fileList"></div>
+      </div>
+
+      <!-- TONE -->
+      <div class="field-group">
+        <label class="field-label">🎨 撰寫語氣風格</label>
+        <div class="chips" id="toneChips">
+          <button class="chip active" data-val="正式嚴謹">正式嚴謹</button>
+          <button class="chip" data-val="親民易懂">親民易懂</button>
+          <button class="chip" data-val="警示提醒">警示提醒</button>
+          <button class="chip" data-val="獎勵鼓勵">獎勵鼓勵</button>
+          <button class="chip" data-val="教育說明">教育說明</button>
+        </div>
+      </div>
+
+      <!-- STRUCTURE REFERENCE -->
+      <div class="structure-box">
+        <div class="structure-toggle" id="structToggle" onclick="toggleStruct()">
+          <span>📐 新聞稿架構參考（點擊展開）</span>
+          <span class="arrow">▼</span>
+        </div>
+        <div class="structure-content" id="structContent">
+          <div class="struct-item"><span class="struct-num">1</span><span><strong>標題：</strong>精確傳達核心資訊，通常含稅種+行為+結果，7-20字</span></div>
+          <div class="struct-item"><span class="struct-num">2</span><span><strong>首段（導言）：</strong>「財政部高雄國稅局表示，…」固定起式，30-60字</span></div>
+          <div class="struct-item"><span class="struct-num">3</span><span><strong>法規依據：</strong>引述相關法條或規定，建立法律基礎</span></div>
+          <div class="struct-item"><span class="struct-num">4</span><span><strong>案例說明：</strong>以「甲君」等匿名具體舉例，強化理解</span></div>
+          <div class="struct-item"><span class="struct-num">5</span><span><strong>注意事項：</strong>特別提醒、期限、限制條件</span></div>
+          <div class="struct-item"><span class="struct-num">6</span><span><strong>結語：</strong>歡迎洽詢，附免費服務電話0800-000321</span></div>
+          <div class="struct-item"><span class="struct-num">7</span><span><strong>聯絡資訊：</strong>新聞稿聯絡人姓名、部門、電話</span></div>
+        </div>
+      </div>
+
+    </div><!-- end left-scroll -->
+
+    <div class="generate-bar">
+      <button class="btn-generate" id="generateBtn" onclick="generatePressRelease()">
+        <div class="spinner"></div>
+        <span class="btn-text">✦ 產出新聞稿</span>
+      </button>
+    </div>
+  </div><!-- end left-panel -->
+
+  <!-- ====== RIGHT PANEL ====== -->
+  <div class="right-panel">
+
+    <!-- TITLE SECTION -->
+    <div class="title-section">
+      <div class="section-label">新聞稿標題選項（請點選其一）</div>
+      <div id="titleArea">
+        <div class="title-empty">✦ 點擊左方「產出新聞稿」後，將顯示 5 個標題供您選擇</div>
+      </div>
+    </div>
+
+    <!-- CONTENT SECTION -->
+    <div class="content-section">
+      <div class="section-label">新聞稿內容</div>
+
+      <div class="content-area-wrapper" id="contentWrapper">
+        <div class="content-toolbar">
+          <button class="toolbar-btn" onclick="copyContent()">📋 複製全文</button>
+          <button class="toolbar-btn" onclick="downloadContent()">💾 下載 TXT</button>
+          <div class="toolbar-sep"></div>
+          <button class="toolbar-btn" onclick="toggleEdit()">✏️ 手動編輯</button>
+          <button class="toolbar-btn" onclick="clearContent()">🗑️ 清除</button>
+          <div class="toolbar-right">
+            <span class="word-count" id="wordCount">0 字</span>
+          </div>
+        </div>
+
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="loading-spinner"></div>
+          <div class="loading-text" id="loadingText">AI 正在生成新聞稿…</div>
+        </div>
+
+        <div id="contentDisplay" class="content-display" contenteditable="false" oninput="updateWordCount()">
+          <div class="content-placeholder">
+            新聞稿內容將顯示於此。<br><br>
+            您可以：<br>
+            • 填寫左側資訊後按「產出新聞稿」<br>
+            • 生成後在下方輸入修改指示，持續優化內容<br>
+            • 點擊「手動編輯」直接修改文字
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT SECTION -->
+    <div class="chat-section">
+      <div class="quick-actions">
+        <span style="font-size:11px;color:var(--text-faint);margin-right:4px;">快速修改：</span>
+        <button class="quick-btn" onclick="quickAction('請讓語氣更親民易懂')">📢 更親民</button>
+        <button class="quick-btn" onclick="quickAction('請加強法律依據的說明')">⚖️ 加強法條</button>
+        <button class="quick-btn" onclick="quickAction('請新增一個具體案例說明')">📌 加案例</button>
+        <button class="quick-btn" onclick="quickAction('請濃縮精簡，刪除贅詞')">✂️ 精簡</button>
+        <button class="quick-btn" onclick="quickAction('請加強警示提醒的語氣')">⚠️ 強化警示</button>
+        <button class="quick-btn" onclick="quickAction('請重新生成5個標題選項')">🏷️ 換標題</button>
+      </div>
+      <div class="chat-history" id="chatHistory"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chatInput" placeholder="輸入修改指示，例如：請將第二段的法條說明改為第24條之5，並補充持有期間計算方式…" rows="2" onkeydown="handleChatKey(event)"></textarea>
+        <button class="btn-send" id="sendBtn" onclick="sendRevision()">➤</button>
+      </div>
+    </div>
+
+  </div><!-- end right-panel -->
+</div><!-- end main -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+
+// ====== SITE CONFIG — 管理員在此填入 API Key ======
+// 部署前請將下方 YOUR_GEMINI_API_KEY_HERE 替換為您的實際 API Key
+const SITE_CONFIG = {
+  geminiApiKey: 'AIzaSyAWe_VSivvt5kE1YRUkYaXR9Qr6Yxau6Jo',
+  siteName: '財政部高雄國稅局新聞稿AI生成系統',
+  version: '2.0'
+};
+
+// 系統啟動時驗證設定
+window.addEventListener('DOMContentLoaded', () => {
+  if (SITE_CONFIG.geminiApiKey === 'YOUR_GEMINI_API_KEY_HERE') {
+    showSetupBanner();
+  }
+});
+
+function showSetupBanner() {
+  const banner = document.createElement('div');
+  banner.id = 'setupBanner';
+  banner.style.cssText = `
+    position:fixed;top:56px;left:0;right:0;z-index:200;
+    background:#9b2226;color:#fff;padding:10px 24px;
+    font-size:13px;font-family:'Noto Sans TC',sans-serif;
+    display:flex;align-items:center;gap:12px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  `;
+  banner.innerHTML = `
+    <span>⚠️</span>
+    <span><strong>尚未設定 API Key</strong>：請開啟 index.html，將第10行的 <code style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:3px;">YOUR_GEMINI_API_KEY_HERE</code> 替換為您的 Gemini API Key，再重新部署。</span>
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#ffd700;text-decoration:underline;white-space:nowrap;">取得 API Key →</a>
+  `;
+  document.body.appendChild(banner);
+  // Push content down
+  document.querySelector('.main').style.marginTop = '40px';
+}
+
+// ====== 內建知識庫（高雄國稅局常用法條 & 新聞稿範本） ======
+const EMBEDDED_KNOWLEDGE = `
+═══════════════════════════════════════════
+【一、常用稅務法條摘要】
+═══════════════════════════════════════════
+
+▌所得稅法
+• 第4條之4（房地合一稅課稅範圍）：個人及營利事業交易105年1月1日以後取得之房屋、土地，其所得應依本法規定課徵所得稅。
+• 第4條之5（自住房地免稅）：個人交易自住房地，符合「設籍居住連續滿6年、未出租供業務、6年內未曾適用」三要件，400萬元以內免稅，超過部分按10%計稅。
+• 第14條之4（房地合一稅率）：持有2年以內45%、超過2年未逾5年35%、超過5年未逾10年20%、超過10年15%；自住優惠稅率10%。
+• 第14條之8（重購退抵）：出售舊自住房地並於2年內重購，可申請退還或扣抵稅額；重購後5年內不得改作其他用途，否則追繳。
+• 第24條之3（資金借貸設算利息）：公司資金貸與股東或他人未收取利息或利息偏低，應按台灣銀行基準利率設算利息收入課稅。
+• 第24條之5（營利事業房地合一）：110年7月1日起，營利事業出售105年後取得房地，採分開計稅、合併報繳方式，稅率同個人。
+• 第66條之9（未分配盈餘）：營利事業當年度未分配盈餘加徵5%，可減除彌補以往年度虧損（含86年度以前累積盈虧）。
+• 第83條（同業利潤標準）：帳冊不全或未能提示者，依財政部頒同業標準淨利率核定所得額。
+• 第110條（漏報罰則）：短漏報所得稅，處以應補稅額0.5至3倍罰鍰。
+
+▌遺產及贈與稅法
+• 第5條第2款（視同贈與）：以顯著不相當代價讓與財產（如低於資產淨值出售股份），差額視為贈與課稅。
+• 第20條第1項第5款（農地免稅）：作農業使用之農業用地贈與民法第1138條繼承人，不計入贈與總額；受贈後5年內須持續農用，否則追稅。
+
+▌加值型及非加值型營業稅法
+• 第3條（銷售行為範圍）：提供勞務、無償移轉貨物均屬銷售行為，應開立統一發票。
+• 第16條（銷售額定義）：包含全部代價及附帶費用；因違約所付違約金屬銷售額，應課稅；遲延利息非銷售對價，免稅。
+• 第45條、第51條（未登記/逃漏罰則）：未辦稅籍或逃漏稅，處應納稅額5倍以下罰鍰。
+
+▌產業創新條例
+• 第10條（研發投資抵減）：研究發展支出扣除政府補助款及研發單位收入後，可按15%（當年度）或10%（3年內）抵減應納營利事業所得稅額，上限為當年度應納稅額30%。
+
+▌納稅者權利保護法
+• 第4條（基本生活費）：114年度每人基本生活所需費用21.3萬元，超過免稅額及扣除額合計數之差額可自綜合所得總額減除。
+• 第7條第3項（實質課稅原則）：課稅應依交易實質而非外觀形式認定。
+
+▌稅捐稽徵法
+• 第33條（查調財產所得）：已取得執行名義之債權人可申請查調債務人所得及財產資料，每項收費250元。
+• 第48條之1（自動補報免罰）：未經檢舉、未經調查前，主動補報補繳稅款並加計利息，免予處罰。
+
+▌後備軍人召集優待條例
+• 薪資加成150%：營利事業給付員工接受教育召集及臨時召集薪資，可就給付金額150%自所得額中減除。
+
+▌中小企業相關
+• 增僱24歲以下或65歲以上員工薪資：加成100%減除（自113年1月1日起）。
+• 調高現職員工薪資（非基本工資調整部分）：加成75%減除。
+
+═══════════════════════════════════════════
+【二、新聞稿常見架構範本】
+═══════════════════════════════════════════
+
+▌範本A：法規宣導型
+財政部高雄國稅局表示，[背景說明/政策目的]。
+該局說明，依[法條名稱第X條]規定，[法規內容]。
+該局舉例說明，[甲君/甲公司案例，含具體數字]。
+該局特別提醒，[注意事項/期限/限制]。
+民眾如有任何疑問，可撥打免費服務電話0800-000321，該局將竭誠服務。
+
+▌範本B：查核案例型
+財政部高雄國稅局表示，[問題現象說明]，籲請民眾注意。
+該局說明，依[相關法令]規定，[應遵守事項]。
+該局近日查核發現，[具體案例，甲公司/甲君，含稅額數字]，經該局[查核結果及補稅金額]。
+該局提醒，[後續注意事項或自動補報免罰說明]。
+民眾如有任何疑問，可撥打免費服務電話0800-000321，該局將竭誠服務。
+
+▌範本C：優惠申請型
+財政部高雄國稅局表示，為[政策目的]，[租稅優惠內容]。
+該局進一步說明，申請適用[優惠名稱]，應於[期限]，檢附[所需文件]向所在地稅捐稽徵機關提出申請。
+該局特別提醒，本項優惠申請限制：一、[限制一]。二、[限制二]。
+民眾如有任何疑問，可撥打免費服務電話0800-000321，該局將竭誠服務。
+
+═══════════════════════════════════════════
+【三、常見用語對照】
+═══════════════════════════════════════════
+• 金額表示：「新臺幣（下同）XXX萬元」
+• 日期：民國年，例「114年1月1日」
+• 匿名：個人用「甲君」「乙君」，公司用「甲公司」「乙公司」
+• 法條引用：「依所得稅法第14條之4規定」（完整寫出法律名稱）
+• 稽徵機關行文：「該局表示」→「該局說明」→「該局舉例」→「該局提醒」
+• 結尾：固定使用「民眾如有任何疑問，可撥打免費服務電話0800-000321，該局將竭誠服務。」
+• 聯絡人：「新聞稿聯絡人：[部門] [姓名]，電話：（07）XXXXXXX轉XXX」
+`;
+
+// ====== STATE ======
+const selectedUnit = '財政部高雄國稅局';
+let selectedTone = '正式嚴謹';
+let selectedTitle = '';
+let uploadedFiles = [];
+let currentContent = '';
+let isEditable = false;
+let chatMessages = [];
+let isLoading = false;
+
+// Unit fixed to 高雄國稅局 (set in backend prompt)
+
+// ====== TONE CHIPS ======
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    selectedTone = chip.dataset.val;
+  });
+});
+
+// ====== FILE UPLOAD ======
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const fileList = document.getElementById('fileList');
+
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  handleFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', () => handleFiles([...fileInput.files]));
+
+async function handleFiles(files) {
+  for (const f of files) {
+    if (uploadedFiles.find(uf => uf.name === f.name)) continue;
+    const entry = { name: f.name, size: f.size, text: '' };
+    try {
+      if (f.name.endsWith('.pdf') && typeof pdfjsLib !== 'undefined') {
+        entry.text = await extractPdfText(f);
+        entry.extracted = true;
+      } else if (f.type === 'text/plain' || f.name.endsWith('.txt') || f.name.endsWith('.csv')) {
+        entry.text = await f.text();
+        entry.extracted = true;
+      } else {
+        entry.text = '';
+        entry.extracted = false;
+      }
+    } catch(e) { entry.text = ''; entry.extracted = false; }
+    uploadedFiles.push(entry);
+  }
+  renderFileList();
+}
+
+async function extractPdfText(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+  for (let i = 1; i <= Math.min(pdf.numPages, 30); i++) {
+    const page = await pdf.getPage(i);
+    const tc = await page.getTextContent();
+    fullText += tc.items.map(item => item.str).join(' ') + '\n';
+  }
+  return fullText.trim();
+}
+
+function renderFileList() {
+  fileList.innerHTML = '';
+  uploadedFiles.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    const ext = f.name.split('.').pop().toUpperCase();
+    const status = f.extracted
+      ? `<span style="color:var(--success);font-size:10px;">✅已解析</span>`
+      : `<span style="color:var(--text-faint);font-size:10px;">⚠️無法解析</span>`;
+    item.innerHTML = `<span style="font-weight:700;color:var(--accent)">${ext}</span> <span>${f.name}</span> ${status} <span style="color:var(--text-faint)">${(f.size/1024).toFixed(1)}KB</span> <span class="remove-file" onclick="removeFile(${i})">×</span>`;
+    fileList.appendChild(item);
+  });
+}
+
+function removeFile(i) {
+  uploadedFiles.splice(i, 1);
+  renderFileList();
+}
+
+// ====== STRUCT TOGGLE ======
+function toggleStruct() {
+  const toggle = document.getElementById('structToggle');
+  const content = document.getElementById('structContent');
+  toggle.classList.toggle('open');
+  content.classList.toggle('visible');
+}
+
+// ====== GENERATE ======
+async function generatePressRelease() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const mainContent = document.getElementById('mainContent').value.trim();
+  const refContent = document.getElementById('refContent').value.trim();
+
+  if (!mainContent) { showToast('⚠️ 請填寫新聞稿主題與主要內容'); return; }
+
+  setLoading(true, 'AI 正在分析資料並生成新聞稿…');
+  chatMessages = [];
+  renderChatHistory();
+
+  // Use pre-extracted text from uploadedFiles entries
+  let fileText = '';
+  for (const file of uploadedFiles) {
+    if (file.text) {
+      fileText += `\n\n【附件：${file.name}】\n${file.text}`;
+    } else {
+      fileText += `\n\n【附件：${file.name}（格式無法解析，請將關鍵資訊貼入補充欄位）】`;
+    }
+  }
+
+  const systemPrompt = buildSystemPrompt();
+  const userPrompt = buildGeneratePrompt(mainContent, refContent, fileText);
+
+  try {
+    const result = await callGemini(SITE_CONFIG.geminiApiKey, systemPrompt, userPrompt);
+    parseAndRender(result);
+    chatMessages.push({ role: 'user', text: '（初始生成）' });
+    chatMessages.push({ role: 'ai', text: '✅ 新聞稿已生成，請選擇標題並確認內容。可在下方輸入修改指示繼續優化。' });
+    renderChatHistory();
+  } catch(e) {
+    showToast('❌ API 呼叫失敗：' + (e.message || '請確認 API Key 及網路連線'));
+    console.error(e);
+  }
+
+  setLoading(false);
+}
+
+function buildSystemPrompt() {
+  return `你是財政部高雄國稅局的專業新聞稿撰寫助手。你熟悉台灣稅務法規及政府公文寫作風格，並已掌握以下內建知識庫：
+
+${EMBEDDED_KNOWLEDGE}
+
+---
+以上為你的背景知識，撰寫新聞稿時請優先參考。
+
+## 新聞稿架構（必須嚴格遵守）
+1. 標題：精確、具體、含稅種或行為，7-20字，提供5個標題選項（用 [TITLE_1] 到 [TITLE_5] 標記）
+2. 首段（導言）：「財政部高雄國稅局表示，…」固定起式，概述主題
+3. 說明段：法規依據、適用對象、計算方式
+4. 案例說明段：「該局（所）舉例說明，…」以甲、乙等匿名舉例
+5. 注意事項段：「該局（所）特別提醒，…」重要限制或期限
+6. 結語：「民眾如有任何疑問，可撥打免費服務電話0800-000321，該局（所）將竭誠服務。」
+7. 新聞稿聯絡人資訊（如有提供）
+
+## 回應格式（必須使用以下標記）
+[TITLE_1] 標題選項一
+[TITLE_2] 標題選項二
+[TITLE_3] 標題選項三
+[TITLE_4] 標題選項四
+[TITLE_5] 標題選項五
+[CONTENT_START]
+（完整新聞稿正文，不含標題）
+[CONTENT_END]
+
+## 寫作風格
+- 語氣：${selectedTone}
+- 稽徵機關：${selectedUnit}
+- 使用繁體中文
+- 政府公文用語，正式但清晰
+- 金額以「新臺幣（下同）」表示
+- 引用法條完整，例：「依所得稅法第14條之4規定」
+- 日期使用民國年，例：「113年1月1日」`;
+}
+
+function buildGeneratePrompt(main, ref, files) {
+  let prompt = `## 新聞稿主題與內容\n${main}`;
+  if (ref) prompt += `\n\n## 補充參考資料（含法條、NotebookLM 內容）\n${ref}`;
+  if (files) prompt += `\n\n## 上傳附件內容\n${files}`;
+  prompt += `\n\n請依照系統指示，生成完整新聞稿，包含5個標題選項與正文。`;
+  return prompt;
+}
+
+// ====== SEND REVISION ======
+async function sendRevision() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const chatInput = document.getElementById('chatInput');
+  const msg = chatInput.value.trim();
+  if (!msg) return;
+  if (!currentContent) { showToast('⚠️ 請先生成新聞稿'); return; }
+
+  chatInput.value = '';
+  chatMessages.push({ role: 'user', text: msg });
+  renderChatHistory();
+  setLoading(true, 'AI 正在修改內容…');
+
+  const systemPrompt = buildSystemPrompt();
+  const revisionPrompt = `## 當前新聞稿內容\n${currentContent}\n\n## 使用者修改指示\n${msg}\n\n請依照指示修改新聞稿，並輸出完整修改後版本（使用相同格式標記，包含5個標題選項與新版正文）。`;
+
+  try {
+    const result = await callGemini(SITE_CONFIG.geminiApiKey, systemPrompt, revisionPrompt);
+    parseAndRender(result);
+    chatMessages.push({ role: 'ai', text: '✅ 內容已依指示修改完成。' });
+  } catch(e) {
+    chatMessages.push({ role: 'ai', text: '❌ 修改失敗：' + (e.message || '請稍後再試') });
+  }
+
+  renderChatHistory();
+  setLoading(false);
+}
+
+function quickAction(msg) {
+  document.getElementById('chatInput').value = msg;
+  sendRevision();
+}
+
+function handleChatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendRevision();
+  }
+}
+
+// ====== API CALL — Gemini Direct (for GitHub Pages deployment) ======
+async function callGemini(apiKey, systemPrompt, userPrompt) {
+  const key = apiKey || SITE_CONFIG.geminiApiKey;
+  if (!key) throw new Error('尚未設定 Gemini API Key，請聯絡系統管理員');
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+  const body = {
+    system_instruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
+    generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
+  };
+
+  let resp;
+  try {
+    resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  } catch (networkErr) {
+    throw new Error('網路連線失敗：' + networkErr.message);
+  }
+
+  if (!resp.ok) {
+    let errMsg = 'HTTP ' + resp.status;
+    try { const e = await resp.json(); errMsg = e.error?.message || errMsg; } catch(e) {}
+    if (resp.status === 400) errMsg = 'API Key 格式錯誤 (400)';
+    if (resp.status === 403) errMsg = 'API Key 無效或未啟用 Gemini API (403)';
+    if (resp.status === 429) errMsg = '請求過頻，請稍後再試 (429)';
+    throw new Error(errMsg);
+  }
+
+  const data = await resp.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
+// ====== PARSE & RENDER ======
+function parseAndRender(rawText) {
+  // Extract titles
+  const titles = [];
+  for (let i = 1; i <= 5; i++) {
+    const match = rawText.match(new RegExp(`\\[TITLE_${i}\\]\\s*(.+)`));
+    if (match) titles.push(match[1].trim());
+  }
+
+  // Extract content
+  const contentMatch = rawText.match(/\[CONTENT_START\]([\s\S]*?)\[CONTENT_END\]/);
+  const content = contentMatch ? contentMatch[1].trim() : rawText;
+
+  currentContent = content;
+  renderTitles(titles);
+  renderContent(content);
+  updateWordCount();
+  showToast('✅ 新聞稿生成成功！');
+}
+
+function renderTitles(titles) {
+  const area = document.getElementById('titleArea');
+  if (!titles.length) {
+    area.innerHTML = '<div class="title-empty">未能解析標題，請查看正文</div>';
+    return;
+  }
+  area.innerHTML = '<div class="title-candidates">' +
+    titles.map((t, i) => `
+      <div class="title-option" onclick="selectTitle(${i})" id="titleOpt${i}">
+        <span class="title-num">${i+1}</span>
+        <span class="title-text">${t}</span>
+      </div>
+    `).join('') +
+    '</div>';
+}
+
+function selectTitle(i) {
+  document.querySelectorAll('.title-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('titleOpt' + i).classList.add('selected');
+  selectedTitle = document.getElementById('titleOpt' + i).querySelector('.title-text').textContent;
+  showToast('✅ 已選擇標題 ' + (i+1));
+}
+
+function renderContent(text) {
+  const display = document.getElementById('contentDisplay');
+  display.textContent = text;
+  display.style.fontStyle = 'normal';
+}
+
+function updateWordCount() {
+  const display = document.getElementById('contentDisplay');
+  const text = display.textContent || '';
+  const count = text.replace(/\s/g, '').length;
+  document.getElementById('wordCount').textContent = count + ' 字';
+}
+
+// ====== TOOLBAR ACTIONS ======
+function copyContent() {
+  const text = (selectedTitle ? selectedTitle + '\n\n' : '') + (document.getElementById('contentDisplay').textContent || '');
+  if (!text.trim()) { showToast('⚠️ 尚無內容可複製'); return; }
+  navigator.clipboard.writeText(text).then(() => showToast('✅ 已複製到剪貼簿'));
+}
+
+function downloadContent() {
+  const text = (selectedTitle ? selectedTitle + '\n\n' : '') + (document.getElementById('contentDisplay').textContent || '');
+  if (!text.trim()) { showToast('⚠️ 尚無內容可下載'); return; }
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '新聞稿_' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+  showToast('✅ 下載成功');
+}
+
+function toggleEdit() {
+  isEditable = !isEditable;
+  const display = document.getElementById('contentDisplay');
+  display.contentEditable = isEditable ? 'true' : 'false';
+  display.classList.toggle('editable', isEditable);
+  if (isEditable) { display.focus(); showToast('✏️ 手動編輯模式已開啟'); }
+  else { currentContent = display.textContent; showToast('💾 已儲存手動編輯'); }
+}
+
+function clearContent() {
+  if (!currentContent && !document.getElementById('contentDisplay').textContent) return;
+  if (confirm('確定要清除所有內容嗎？')) {
+    currentContent = '';
+    selectedTitle = '';
+    document.getElementById('contentDisplay').innerHTML = '<div class="content-placeholder">內容已清除，請重新生成。</div>';
+    document.getElementById('titleArea').innerHTML = '<div class="title-empty">✦ 點擊左方「產出新聞稿」後，將顯示 5 個標題供您選擇</div>';
+    chatMessages = [];
+    renderChatHistory();
+    updateWordCount();
+  }
+}
+
+// ====== CHAT HISTORY ======
+function renderChatHistory() {
+  const history = document.getElementById('chatHistory');
+  if (!chatMessages.length) { history.innerHTML = ''; return; }
+  history.innerHTML = chatMessages.map(m => `
+    <div class="chat-msg ${m.role}">${m.text}</div>
+  `).join('');
+  history.scrollTop = history.scrollHeight;
+}
+
+// ====== LOADING ======
+function setLoading(show, text='') {
+  isLoading = show;
+  const btn = document.getElementById('generateBtn');
+  const overlay = document.getElementById('loadingOverlay');
+  const sendBtn = document.getElementById('sendBtn');
+  btn.disabled = show;
+  btn.classList.toggle('loading', show);
+  sendBtn.disabled = show;
+  overlay.classList.toggle('show', show);
+  if (text) document.getElementById('loadingText').textContent = text;
+}
+
+// ====== TOAST ======
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
