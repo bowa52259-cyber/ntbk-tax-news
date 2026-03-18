@@ -737,10 +737,12 @@
 
       <!-- API KEY -->
       <div class="field-group">
-        <label class="field-label">ℹ️ AI 模型說明 <span class="hint">（Gemini API，管理員已預設）</span></label>
-        <input type="text" id="apiKey" placeholder="（Gemini API Key 已由管理員內建，使用者無需設定）" autocomplete="off" style="font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:1px;background:var(--surface-2);color:var(--text-faint);" readonly />
+        <label class="field-label">🔑 Gemini API Key 設定</label>
+        <div id="keyStatus" style="font-size:12px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;line-height:1.6;">
+          載入中...
+        </div>
         <div class="gemini-note">
-          ✅ 已整合 <strong>Gemini 2.0 Flash</strong>，使用者無需設定 API Key。<br>
+          ✅ 使用 <strong>Gemini 2.0 Flash</strong>。首次使用請設定您的 API Key（儲存於本機，不上傳伺服器）。<br>
           📚 <strong>內建知識庫</strong>：高雄國稅局常用法條、新聞稿範本、用語對照已預載。<br>
           🔗 NotebookLM 內容：請從筆記本對話中複製相關段落貼入「補充參考資料」欄位，即可納入 AI 參考範圍。
         </div>
@@ -890,39 +892,117 @@
 
 <script>
 
-// ====== SITE CONFIG — 管理員在此填入 API Key ======
-// 部署前請將下方 YOUR_GEMINI_API_KEY_HERE 替換為您的實際 API Key
+// ====== SITE CONFIG ======
 const SITE_CONFIG = {
-  geminiApiKey: 'AIzaSyAWe_VSivvt5kE1YRUkYaXR9Qr6Yxau6Jo',
   siteName: '財政部高雄國稅局新聞稿AI生成系統',
-  version: '2.0'
+  version: '2.1'
 };
 
-// 系統啟動時驗證設定
+// ── API Key 管理：從 localStorage 讀取，首次使用彈出設定視窗 ──
+function getApiKey() {
+  return localStorage.getItem('ntbk_gemini_key') || '';
+}
+function saveApiKey(key) {
+  localStorage.setItem('ntbk_gemini_key', key.trim());
+}
+function clearApiKey() {
+  localStorage.removeItem('ntbk_gemini_key');
+}
+
+// ── 首次載入：若無 Key 則顯示設定視窗 ──
 window.addEventListener('DOMContentLoaded', () => {
-  if (SITE_CONFIG.geminiApiKey === 'YOUR_GEMINI_API_KEY_HERE') {
-    showSetupBanner();
+  updateKeyStatus();
+  if (!getApiKey()) {
+    setTimeout(showApiKeyModal, 500);
   }
 });
 
-function showSetupBanner() {
-  const banner = document.createElement('div');
-  banner.id = 'setupBanner';
-  banner.style.cssText = `
-    position:fixed;top:56px;left:0;right:0;z-index:200;
-    background:#9b2226;color:#fff;padding:10px 24px;
-    font-size:13px;font-family:'Noto Sans TC',sans-serif;
-    display:flex;align-items:center;gap:12px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.3);
+function updateKeyStatus() {
+  const key = getApiKey();
+  const statusEl = document.getElementById('keyStatus');
+  if (!statusEl) return;
+  if (key) {
+    const masked = key.substring(0,8) + '••••••••' + key.slice(-4);
+    statusEl.innerHTML = `✅ API Key 已設定 <span style="font-family:monospace;font-size:11px;color:var(--text-faint)">${masked}</span> <button onclick="showApiKeyModal()" style="margin-left:8px;font-size:11px;padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--bg);cursor:pointer;color:var(--text-muted)">變更</button>`;
+    statusEl.style.color = 'var(--success)';
+  } else {
+    statusEl.innerHTML = `⚠️ 尚未設定 API Key <button onclick="showApiKeyModal()" style="margin-left:8px;font-size:11px;padding:2px 8px;border:1px solid var(--accent);border-radius:4px;background:var(--accent-light);cursor:pointer;color:var(--accent-dark);font-weight:700">立即設定</button>`;
+    statusEl.style.color = 'var(--error)';
+  }
+}
+
+function showApiKeyModal() {
+  const existing = document.getElementById('apiKeyModal');
+  if (existing) existing.remove();
+  
+  const modal = document.createElement('div');
+  modal.id = 'apiKeyModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:999;
+    background:rgba(0,0,0,0.5);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Noto Sans TC',sans-serif;
   `;
-  banner.innerHTML = `
-    <span>⚠️</span>
-    <span><strong>尚未設定 API Key</strong>：請開啟 index.html，將第10行的 <code style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:3px;">YOUR_GEMINI_API_KEY_HERE</code> 替換為您的 Gemini API Key，再重新部署。</span>
-    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#ffd700;text-decoration:underline;white-space:nowrap;">取得 API Key →</a>
+  modal.innerHTML = `
+    <div style="background:#fff;border-radius:16px;padding:32px;width:460px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:40px;height:40px;background:#f5e9cc;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;">🔑</div>
+        <div>
+          <div style="font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;color:#1a1612">設定 Gemini API Key</div>
+          <div style="font-size:12px;color:#a0937f;margin-top:2px">儲存於本機瀏覽器，不會上傳至任何伺服器</div>
+        </div>
+      </div>
+      
+      <div style="background:#f5f3ee;border-radius:8px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#6b5e4e;line-height:1.7;">
+        📌 <strong>如何取得 API Key？</strong><br>
+        1. 前往 <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#8b6914">aistudio.google.com/app/apikey</a><br>
+        2. 點「Create API key」<br>
+        3. 複製 Key（格式：AIzaSy 開頭，約39字元）
+      </div>
+      
+      <label style="font-size:12px;font-weight:700;color:#6b5e4e;letter-spacing:0.5px;text-transform:uppercase;">API Key</label>
+      <input id="modalApiKeyInput" type="password" 
+        placeholder="AIzaSy..." 
+        style="width:100%;margin-top:6px;padding:12px;border:1.5px solid #d8d0c4;border-radius:8px;font-family:monospace;font-size:13px;outline:none;box-sizing:border-box;"
+        onkeydown="if(event.key==='Enter')saveApiKeyFromModal()"
+      />
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#6b5e4e;cursor:pointer;">
+          <input type="checkbox" onchange="document.getElementById('modalApiKeyInput').type=this.checked?'text':'password'"> 顯示 Key
+        </label>
+        <span id="modalKeyError" style="font-size:11px;color:#9b2226;"></span>
+      </div>
+      
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button onclick="saveApiKeyFromModal()" 
+          style="flex:1;background:#5c4509;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-family:'Noto Sans TC',sans-serif;font-weight:700;cursor:pointer;">
+          ✓ 儲存並開始使用
+        </button>
+        ${getApiKey() ? `<button onclick="document.getElementById('apiKeyModal').remove()" 
+          style="padding:12px 16px;border:1.5px solid #d8d0c4;border-radius:8px;background:#f5f3ee;cursor:pointer;font-size:13px;font-family:'Noto Sans TC',sans-serif;">
+          取消
+        </button>` : ''}
+      </div>
+    </div>
   `;
-  document.body.appendChild(banner);
-  // Push content down
-  document.querySelector('.main').style.marginTop = '40px';
+  document.body.appendChild(modal);
+  setTimeout(() => document.getElementById('modalApiKeyInput').focus(), 100);
+}
+
+function saveApiKeyFromModal() {
+  const input = document.getElementById('modalApiKeyInput');
+  const key = input.value.trim();
+  const errEl = document.getElementById('modalKeyError');
+  
+  if (!key) { errEl.textContent = '請輸入 API Key'; return; }
+  if (!key.startsWith('AIza') || key.length < 30) { 
+    errEl.textContent = 'Key 格式不正確，應以 AIza 開頭'; return; 
+  }
+  
+  saveApiKey(key);
+  document.getElementById('apiKeyModal').remove();
+  updateKeyStatus();
+  showToast('✅ API Key 已儲存，現在可以產出新聞稿了！');
 }
 
 // ====== 內建知識庫（高雄國稅局常用法條 & 新聞稿範本） ======
@@ -1102,7 +1182,6 @@ function toggleStruct() {
 
 // ====== GENERATE ======
 async function generatePressRelease() {
-  const apiKey = document.getElementById('apiKey').value.trim();
   const mainContent = document.getElementById('mainContent').value.trim();
   const refContent = document.getElementById('refContent').value.trim();
 
@@ -1126,7 +1205,7 @@ async function generatePressRelease() {
   const userPrompt = buildGeneratePrompt(mainContent, refContent, fileText);
 
   try {
-    const result = await callGemini(SITE_CONFIG.geminiApiKey, systemPrompt, userPrompt);
+    const result = await callGemini(null, systemPrompt, userPrompt);
     parseAndRender(result);
     chatMessages.push({ role: 'user', text: '（初始生成）' });
     chatMessages.push({ role: 'ai', text: '✅ 新聞稿已生成，請選擇標題並確認內容。可在下方輸入修改指示繼續優化。' });
@@ -1186,7 +1265,6 @@ function buildGeneratePrompt(main, ref, files) {
 
 // ====== SEND REVISION ======
 async function sendRevision() {
-  const apiKey = document.getElementById('apiKey').value.trim();
   const chatInput = document.getElementById('chatInput');
   const msg = chatInput.value.trim();
   if (!msg) return;
@@ -1201,7 +1279,7 @@ async function sendRevision() {
   const revisionPrompt = `## 當前新聞稿內容\n${currentContent}\n\n## 使用者修改指示\n${msg}\n\n請依照指示修改新聞稿，並輸出完整修改後版本（使用相同格式標記，包含5個標題選項與新版正文）。`;
 
   try {
-    const result = await callGemini(SITE_CONFIG.geminiApiKey, systemPrompt, revisionPrompt);
+    const result = await callGemini(null, systemPrompt, revisionPrompt);
     parseAndRender(result);
     chatMessages.push({ role: 'ai', text: '✅ 內容已依指示修改完成。' });
   } catch(e) {
@@ -1226,8 +1304,8 @@ function handleChatKey(e) {
 
 // ====== API CALL — Gemini Direct (for GitHub Pages deployment) ======
 async function callGemini(apiKey, systemPrompt, userPrompt) {
-  const key = apiKey || SITE_CONFIG.geminiApiKey;
-  if (!key) throw new Error('尚未設定 Gemini API Key，請聯絡系統管理員');
+  const key = getApiKey();
+  if (!key) { showApiKeyModal(); throw new Error('請先設定 Gemini API Key'); }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
   const body = {
