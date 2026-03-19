@@ -707,6 +707,30 @@
     .left-panel, .right-panel { height: auto; }
     .content-area-wrapper { height: 400px; }
   }
+
+  /* ── 資料庫搜尋 ── */
+  .db-section { border: 1.5px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .db-header { padding: 10px 14px; background: var(--surface-2); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .db-header-title { font-size: 12px; font-weight: 700; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+  .db-badge { background: var(--accent); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 99px; font-weight: 700; }
+  .db-body { display: none; padding: 12px 14px; flex-direction: column; gap: 8px; }
+  .db-body.open { display: flex; }
+  .db-search-row { display: flex; gap: 6px; }
+  .db-search-input { flex: 1; padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 7px; font-size: 12px; font-family: 'Noto Sans TC', sans-serif; outline: none; }
+  .db-search-input:focus { border-color: var(--border-focus); }
+  .db-search-btn { padding: 8px 12px; background: var(--accent); color: #fff; border: none; border-radius: 7px; font-size: 12px; cursor: pointer; white-space: nowrap; }
+  .db-results { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+  .db-result-item { padding: 8px 10px; border: 1.5px solid var(--border); border-radius: 7px; background: var(--bg); cursor: pointer; transition: 0.15s; }
+  .db-result-item:hover { border-color: var(--accent); background: var(--accent-light); }
+  .db-result-item.selected { border-color: var(--accent); background: var(--accent-light); }
+  .db-result-title { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.4; }
+  .db-result-meta { display: flex; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+  .db-tag { font-size: 10px; padding: 1px 7px; border-radius: 99px; background: var(--tag-bg); color: var(--text-muted); }
+  .db-tag.cat { background: var(--accent-light); color: var(--accent-dark); }
+  .db-selected-count { font-size: 11px; color: var(--accent-dark); font-weight: 700; }
+  .db-empty { font-size: 12px; color: var(--text-faint); text-align: center; padding: 16px; }
+  .db-status { font-size: 11px; color: var(--text-faint); text-align: center; padding: 6px; }
+
 </style>
 </head>
 <body>
@@ -737,21 +761,21 @@
 
       <!-- API KEY -->
       <div class="field-group">
-        <label class="field-label">👤 登入 / API Key 狀態</label>
+        <label class="field-label">⚡ 系統狀態</label>
         <div id="keyStatus" style="font-size:12px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;line-height:1.6;">
           載入中...
         </div>
         <div class="gemini-note">
           ✅ 使用 <strong>Gemini 2.0 Flash</strong>。首次使用請設定您的 API Key（儲存於本機，不上傳伺服器）。<br>
           📚 <strong>內建知識庫</strong>：高雄國稅局常用法條、新聞稿範本、用語對照已預載。<br>
-          🔗 NotebookLM 內容：請從筆記本對話中複製相關段落貼入「補充參考資料」欄位，即可納入 AI 參考範圍。
+          📌 NotebookLM 內容：從筆記本複製相關段落貼入「補充參考資料」欄位，AI 生成時會自動參考。
         </div>
       </div>
 
       <!-- MAIN CONTENT INPUT -->
       <div class="field-group">
         <label class="field-label">📋 新聞稿主題與主要內容 <span class="required">*</span></label>
-        <textarea id="mainContent" rows="6" placeholder="請描述：
+        <textarea id="mainContent" onblur="autoSearchFromTopic()" rows="6" placeholder="請描述：
 • 新聞稿主題（例：個人出售繼承房地適用房地合一稅）
 • 適用法條（例：所得稅法第14條之4）
 • 案例說明（如有）
@@ -813,6 +837,35 @@
       </div>
 
     </div><!-- end left-scroll -->
+
+
+      <!-- 資料庫搜尋 -->
+      <div class="db-section" id="dbSection">
+        <div class="db-header" onclick="toggleDbSection()">
+          <span class="db-header-title">
+            🗂️ 新聞稿資料庫
+            <span class="db-badge" id="dbCount">載入中</span>
+          </span>
+          <span id="dbArrow" style="font-size:11px;color:var(--text-faint);">▼</span>
+        </div>
+        <div class="db-body" id="dbBody">
+          <div id="dbStatusMsg" class="db-status">正在載入資料庫...</div>
+          <div class="db-search-row" id="dbSearchRow" style="display:none;">
+            <input class="db-search-input" id="dbSearchInput"
+              placeholder="輸入關鍵字搜尋，例：房地合一、自住、繼承..."
+              onkeydown="if(event.key==='Enter')searchDb()" />
+            <button class="db-search-btn" onclick="searchDb()">搜尋</button>
+          </div>
+          <div id="dbResults" class="db-results"></div>
+          <div id="dbSelectedInfo" style="display:none;">
+            <span class="db-selected-count" id="dbSelectedCount">已選 0 則參考範本</span>
+            <button onclick="clearDbSelection()"
+              style="margin-left:8px;font-size:10px;padding:2px 8px;
+              border:1px solid var(--border);border-radius:4px;
+              background:var(--bg);cursor:pointer;color:var(--text-muted);">清除</button>
+          </div>
+        </div>
+      </div>
 
     <div class="generate-bar">
       <button class="btn-generate" id="generateBtn" onclick="generatePressRelease()">
@@ -895,237 +948,45 @@
 // ====== SITE CONFIG ======
 const SITE_CONFIG = {
   siteName: '財政部高雄國稅局新聞稿AI生成系統',
-  version: '3.1',
-  googleClientId: '240170147041-nbf6pe6p59s93e0chsfp11kuenvku57q.apps.googleusercontent.com'
+  version: '6.0',
+  // ─────────────────────────────────────────────────────
+  // 使用說明：
+  // 此 HTML 使用 Anthropic API，在 claude.ai 環境中已預授權
+  // 任何擁有 Claude 帳號的使用者，上傳此 HTML 即可直接使用
+  // 不需要 API Key、不需要 Google 登入、不需要任何額外設定
+  // ─────────────────────────────────────────────────────
 };
 
-// ====== 身份驗證 + API Key 管理 ======
-// 設計：Google 登入驗證身份 → 登入後輸入個人 Gemini API Key → 儲存本機
-let currentUser = null;
-
+// 頁面載入後直接初始化，不需要任何驗證流程
 window.addEventListener('DOMContentLoaded', () => {
-  const script = document.createElement('script');
-  script.src = 'https://accounts.google.com/gsi/client';
-  script.onload = initGoogleAuth;
-  document.head.appendChild(script);
+  updateKeyStatus();
+  loadNewsDatabase();
 });
 
-function initGoogleAuth() {
-  if (SITE_CONFIG.googleClientId === 'GOOGLE_CLIENT_ID_HERE') {
-    // 尚未設定 Client ID — 跳過登入，直接進入（開發模式）
-    currentUser = { name: '訪客', email: 'guest', picture: '' };
-    checkApiKey();
-    return;
-  }
-  // 檢查是否已有登入 session
-  const saved = sessionStorage.getItem('ntbk_user');
-  if (saved) {
-    currentUser = JSON.parse(saved);
-    checkApiKey();
-  } else {
-    renderLoginScreen();
-  }
-}
-
-// ── 登入畫面 ──
-function renderLoginScreen() {
-  document.querySelector('.main').style.display = 'none';
-  const old = document.getElementById('loginScreen');
-  if (old) old.remove();
-
-  const loginScreen = document.createElement('div');
-  loginScreen.id = 'loginScreen';
-  loginScreen.style.cssText = `
-    position:fixed;inset:0;top:56px;background:var(--bg);
-    display:flex;align-items:center;justify-content:center;z-index:500;
-  `;
-  loginScreen.innerHTML = `
-    <div style="background:#fff;border-radius:20px;padding:48px 40px;width:420px;
-      max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.15);text-align:center;">
-      <div style="font-size:40px;margin-bottom:16px;">📰</div>
-      <div style="font-family:'Noto Serif TC',serif;font-size:20px;font-weight:700;
-        color:var(--accent-dark);margin-bottom:6px;">財政部高雄國稅局</div>
-      <div style="font-size:13px;color:var(--text-muted);margin-bottom:28px;">
-        新聞稿 AI 生成系統
-      </div>
-      <div id="googleBtnContainer"></div>
-      <p style="margin-top:20px;font-size:11px;color:var(--text-faint);line-height:1.7;">
-        🔒 僅用於驗證身份，不存取您的郵件或個人資料
-      </p>
-    </div>
-  `;
-  document.body.appendChild(loginScreen);
-
-  google.accounts.id.initialize({
-    client_id: SITE_CONFIG.googleClientId,
-    callback: onGoogleLogin,
-    auto_select: true,
-  });
-  google.accounts.id.renderButton(
-    document.getElementById('googleBtnContainer'),
-    { theme: 'outline', size: 'large', text: 'signin_with', locale: 'zh-TW', width: 280 }
-  );
-  google.accounts.id.prompt();
-}
-
-// ── 登入成功回呼 ──
-function onGoogleLogin(response) {
-  try {
-    const payload = JSON.parse(atob(response.credential.split('.')[1]));
-    currentUser = { name: payload.name, email: payload.email, picture: payload.picture };
-    sessionStorage.setItem('ntbk_user', JSON.stringify(currentUser));
-    document.getElementById('loginScreen')?.remove();
-    document.querySelector('.main').style.display = '';
-    checkApiKey();
-    showToast(`✅ 歡迎，${currentUser.name}！`);
-  } catch(e) {
-    console.error('Login error:', e);
-  }
-}
-
-// ── 登入後：檢查是否有 API Key ──
-function checkApiKey() {
-  updateKeyStatus();
-  if (!getApiKey()) {
-    setTimeout(showApiKeyModal, 600);
-  }
-}
-
-// ── API Key 管理（存在 localStorage，以 email 為 key 區隔）──
-function getApiKey() {
-  const k = currentUser ? `ntbk_key_${currentUser.email}` : 'ntbk_key_guest';
-  return localStorage.getItem(k) || '';
-}
-function saveApiKey(key) {
-  const k = currentUser ? `ntbk_key_${currentUser.email}` : 'ntbk_key_guest';
-  localStorage.setItem(k, key.trim());
-}
-
-// ── 左側狀態顯示 ──
 function updateKeyStatus() {
   const el = document.getElementById('keyStatus');
   if (!el) return;
-  const key = getApiKey();
-  const userHtml = currentUser && currentUser.email !== 'guest' ? `
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;
-      padding-bottom:8px;border-bottom:1px solid var(--border);">
-      <img src="${currentUser.picture}" style="width:24px;height:24px;border-radius:50%;"
-        onerror="this.style.display='none'">
-      <span style="font-size:12px;color:var(--text-muted);overflow:hidden;
-        text-overflow:ellipsis;white-space:nowrap;flex:1;">${currentUser.name}</span>
-      <button onclick="signOut()" style="font-size:10px;padding:2px 7px;
-        border:1px solid var(--border);border-radius:4px;background:var(--bg);
-        cursor:pointer;color:var(--text-muted);">登出</button>
-    </div>` : '';
-
-  if (key) {
-    const masked = key.substring(0,8) + '••••••••' + key.slice(-4);
-    el.innerHTML = `${userHtml}
-      <div style="font-size:12px;color:var(--success);font-weight:700;">✅ API Key 已設定</div>
-      <div style="font-size:11px;color:var(--text-faint);font-family:monospace;margin-top:2px;">
-        ${masked}
-        <button onclick="showApiKeyModal()" style="margin-left:6px;font-size:10px;
-          padding:1px 6px;border:1px solid var(--border);border-radius:3px;
-          background:var(--bg);cursor:pointer;color:var(--text-muted);">變更</button>
-      </div>
-      <div style="font-size:10px;color:var(--text-faint);margin-top:4px;">
-        🔋 每日免費配額 1,500 次
-      </div>`;
-  } else {
-    el.innerHTML = `${userHtml}
-      <div style="font-size:12px;color:var(--error);">
-        ⚠️ 尚未設定 Gemini API Key
-        <button onclick="showApiKeyModal()" style="margin-left:6px;font-size:11px;
-          padding:3px 10px;border:1px solid var(--accent);border-radius:4px;
-          background:var(--accent-light);cursor:pointer;color:var(--accent-dark);
-          font-weight:700;">立即設定</button>
-      </div>`;
-  }
-}
-
-// ── API Key 設定視窗 ──
-function showApiKeyModal() {
-  document.getElementById('apiKeyModal')?.remove();
-  const modal = document.createElement('div');
-  modal.id = 'apiKeyModal';
-  modal.style.cssText = `position:fixed;inset:0;z-index:999;
-    background:rgba(0,0,0,0.5);display:flex;align-items:center;
-    justify-content:center;font-family:'Noto Sans TC',sans-serif;`;
-  modal.innerHTML = `
-    <div style="background:#fff;border-radius:16px;padding:32px;width:460px;
-      max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <div style="width:40px;height:40px;background:#f5e9cc;border-radius:10px;
-          display:flex;align-items:center;justify-content:center;font-size:20px;">🔑</div>
-        <div>
-          <div style="font-family:'Noto Serif TC',serif;font-size:16px;font-weight:700;">
-            設定個人 Gemini API Key</div>
-          <div style="font-size:12px;color:#a0937f;margin-top:2px;">
-            ${currentUser?.name || ''} 專屬，儲存於本機瀏覽器</div>
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;padding:4px 0;">
+      <div style="width:9px;height:9px;border-radius:50%;
+        background:#4ade80;box-shadow:0 0 6px #4ade80;flex-shrink:0;"></div>
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--success);">
+          已連線 · Claude Sonnet 4
+        </div>
+        <div style="font-size:11px;color:var(--text-faint);margin-top:2px;">
+          填寫左側內容後點「✦ 產出新聞稿」即可使用
         </div>
       </div>
-      <div style="background:#f5f3ee;border-radius:8px;padding:12px 14px;
-        margin-bottom:16px;font-size:12px;color:#6b5e4e;line-height:1.7;">
-        📌 <strong>取得免費 API Key：</strong><br>
-        1. 前往 <a href="https://aistudio.google.com/app/apikey" target="_blank"
-          style="color:#8b6914;">aistudio.google.com/app/apikey</a><br>
-        2. 點「<strong>Create API key</strong>」→ 選現有專案或新建<br>
-        3. 複製 Key（AIzaSy 開頭，約 39 字元）
-      </div>
-      <label style="font-size:12px;font-weight:700;color:#6b5e4e;
-        letter-spacing:0.5px;text-transform:uppercase;">API Key</label>
-      <input id="modalApiKeyInput" type="password" placeholder="AIzaSy..."
-        style="width:100%;margin-top:6px;padding:12px;border:1.5px solid #d8d0c4;
-        border-radius:8px;font-family:monospace;font-size:13px;outline:none;
-        box-sizing:border-box;"
-        onkeydown="if(event.key==='Enter')saveApiKeyFromModal()"/>
-      <div style="display:flex;justify-content:space-between;
-        align-items:center;margin-top:6px;">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;
-          color:#6b5e4e;cursor:pointer;">
-          <input type="checkbox"
-            onchange="document.getElementById('modalApiKeyInput').type=
-              this.checked?'text':'password'"> 顯示 Key
-        </label>
-        <span id="modalKeyError" style="font-size:11px;color:#9b2226;"></span>
-      </div>
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button onclick="saveApiKeyFromModal()"
-          style="flex:1;background:#5c4509;color:#fff;border:none;border-radius:8px;
-          padding:12px;font-size:14px;font-family:'Noto Sans TC',sans-serif;
-          font-weight:700;cursor:pointer;">✓ 儲存並開始使用</button>
-        ${getApiKey() ? `<button onclick="document.getElementById('apiKeyModal').remove()"
-          style="padding:12px 16px;border:1.5px solid #d8d0c4;border-radius:8px;
-          background:#f5f3ee;cursor:pointer;font-size:13px;
-          font-family:'Noto Sans TC',sans-serif;">取消</button>` : ''}
-      </div>
-    </div>`;
-  document.body.appendChild(modal);
-  setTimeout(() => document.getElementById('modalApiKeyInput')?.focus(), 100);
+    </div>
+  `;
 }
 
-function saveApiKeyFromModal() {
-  const input = document.getElementById('modalApiKeyInput');
-  const key = input.value.trim();
-  const errEl = document.getElementById('modalKeyError');
-  if (!key) { errEl.textContent = '請輸入 API Key'; return; }
-  if (!key.startsWith('AIza') || key.length < 30) {
-    errEl.textContent = 'Key 格式不正確，應以 AIza 開頭'; return;
-  }
-  saveApiKey(key);
-  document.getElementById('apiKeyModal').remove();
-  updateKeyStatus();
-  showToast('✅ API Key 已儲存！');
-}
-
-// ── 登出 ──
-function signOut() {
-  if (!confirm('確定要登出嗎？')) return;
-  sessionStorage.removeItem('ntbk_user');
-  currentUser = null;
-  if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
-  location.reload();
-}
+// 保留空函數維持介面相容性
+function getApiKey() { return ''; }
+function showApiKeyModal() {}
+function saveApiKeyFromModal() {}
+function signOut() {}
 
 // ====== 內建知識庫（高雄國稅局常用法條 & 新聞稿範本） ======
 const EMBEDDED_KNOWLEDGE = `
@@ -1206,6 +1067,207 @@ const EMBEDDED_KNOWLEDGE = `
 • 結尾：固定使用「民眾如有任何疑問，可撥打免費服務電話0800-000321，該局將竭誠服務。」
 • 聯絡人：「新聞稿聯絡人：[部門] [姓名]，電話：（07）XXXXXXX轉XXX」
 `;
+
+
+// ====== 新聞稿資料庫搜尋系統 ======
+let newsDatabase = [];
+let selectedDbItems = [];
+
+// 載入資料庫：優先嘗試 news_index.json，若無則顯示提示
+async function loadNewsDatabase() {
+  try {
+    // 嘗試從同目錄載入 news_index.json
+    const resp = await fetch('./news_index.json');
+    if (resp.ok) {
+      const data = await resp.json();
+      newsDatabase = data.articles || [];
+      updateDbUI(true);
+      console.log(`✅ 資料庫載入：${newsDatabase.length} 筆`);
+    } else {
+      updateDbUI(false);
+    }
+  } catch(e) {
+    // 無資料庫檔案，顯示說明
+    updateDbUI(false);
+  }
+}
+
+function updateDbUI(loaded) {
+  const countEl = document.getElementById('dbCount');
+  const statusEl = document.getElementById('dbStatusMsg');
+  const searchRow = document.getElementById('dbSearchRow');
+
+  if (loaded && newsDatabase.length > 0) {
+    countEl.textContent = `${newsDatabase.length} 則`;
+    countEl.style.background = 'var(--success)';
+    statusEl.style.display = 'none';
+    searchRow.style.display = 'flex';
+    // 自動顯示所有分類
+    renderCategoryBrowse();
+  } else {
+    countEl.textContent = '未載入';
+    countEl.style.background = 'var(--text-faint)';
+    statusEl.innerHTML = `
+      <div style="text-align:left;line-height:1.8;">
+        📂 尚未載入新聞稿資料庫<br>
+        <span style="font-size:10px;color:var(--text-faint);">
+          請執行 <code style="background:#eee;padding:1px 5px;border-radius:3px;">build_news_index.py</code>
+          產生 <code style="background:#eee;padding:1px 5px;border-radius:3px;">news_index.json</code>
+          後放入同資料夾，或將新聞稿內容貼入「補充參考資料」欄位。
+        </span>
+      </div>`;
+    statusEl.style.display = 'block';
+    searchRow.style.display = 'none';
+  }
+}
+
+function renderCategoryBrowse() {
+  const results = document.getElementById('dbResults');
+  // 統計分類
+  const cats = {};
+  newsDatabase.forEach(item => {
+    cats[item.category] = (cats[item.category] || 0) + 1;
+  });
+  results.innerHTML = `
+    <div style="font-size:11px;color:var(--text-faint);margin-bottom:4px;">
+      📁 點擊分類快速篩選，或直接輸入關鍵字搜尋：
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;">
+      ${Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([cat, count]) => `
+        <button onclick="searchByCategory('${cat}')"
+          style="padding:3px 10px;border-radius:99px;border:1px solid var(--border);
+          background:var(--bg);font-size:11px;cursor:pointer;color:var(--text-muted);
+          font-family:'Noto Sans TC',sans-serif;transition:0.15s;"
+          onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent-dark)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">
+          ${cat} (${count})
+        </button>
+      `).join('')}
+    </div>
+  `;
+}
+
+function searchByCategory(cat) {
+  document.getElementById('dbSearchInput').value = cat;
+  searchDb();
+}
+
+function searchDb() {
+  const query = document.getElementById('dbSearchInput').value.trim();
+  if (!query) { renderCategoryBrowse(); return; }
+
+  const terms = query.split(/[\s,，]+/).filter(Boolean);
+  const results = newsDatabase
+    .map(item => {
+      let score = 0;
+      const searchText = (item.title + item.category + item.keywords.join(' ') + item.summary).toLowerCase();
+      terms.forEach(term => {
+        const t = term.toLowerCase();
+        if (item.title.includes(term)) score += 10;
+        if (item.category.includes(term)) score += 6;
+        if (item.keywords.some(k => k.includes(term))) score += 4;
+        if (item.summary.includes(term)) score += 2;
+      });
+      return { ...item, score };
+    })
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 15);
+
+  renderDbResults(results, query);
+}
+
+function renderDbResults(results, query) {
+  const container = document.getElementById('dbResults');
+  if (!results.length) {
+    container.innerHTML = `<div class="db-empty">找不到「${query}」相關新聞稿</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div style="font-size:11px;color:var(--text-faint);padding:2px 0 4px;">
+      找到 ${results.length} 筆相關結果，點擊加入參考範本：
+    </div>
+    ${results.map((item, i) => `
+      <div class="db-result-item ${selectedDbItems.find(s=>s.id===item.id)?'selected':''}"
+        id="dbItem_${item.id}"
+        onclick="toggleDbItem(${JSON.stringify(item).replace(/"/g,'&quot;')})">
+        <div class="db-result-title">${item.title}</div>
+        <div class="db-result-meta">
+          <span class="db-tag cat">${item.category}</span>
+          ${item.keywords.slice(0,4).map(k=>`<span class="db-tag">${k}</span>`).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function toggleDbItem(item) {
+  const idx = selectedDbItems.findIndex(s => s.id === item.id);
+  const el = document.getElementById('dbItem_' + item.id);
+
+  if (idx >= 0) {
+    selectedDbItems.splice(idx, 1);
+    el?.classList.remove('selected');
+  } else {
+    if (selectedDbItems.length >= 5) {
+      showToast('⚠️ 最多選擇 5 則參考範本');
+      return;
+    }
+    selectedDbItems.push(item);
+    el?.classList.add('selected');
+  }
+  updateSelectedInfo();
+}
+
+function updateSelectedInfo() {
+  const info = document.getElementById('dbSelectedInfo');
+  const count = document.getElementById('dbSelectedCount');
+  if (selectedDbItems.length > 0) {
+    info.style.display = 'flex';
+    info.style.alignItems = 'center';
+    count.textContent = `✅ 已選 ${selectedDbItems.length} 則參考範本`;
+  } else {
+    info.style.display = 'none';
+  }
+}
+
+function clearDbSelection() {
+  selectedDbItems = [];
+  document.querySelectorAll('.db-result-item').forEach(el => el.classList.remove('selected'));
+  updateSelectedInfo();
+}
+
+function toggleDbSection() {
+  const body = document.getElementById('dbBody');
+  const arrow = document.getElementById('dbArrow');
+  const isOpen = body.classList.toggle('open');
+  arrow.textContent = isOpen ? '▲' : '▼';
+}
+
+// 取得選定範本供 AI 參考
+function getSelectedDbContext() {
+  if (!selectedDbItems.length) return '';
+  return selectedDbItems.map((item, i) =>
+    `【參考範本 ${i+1}：${item.title}】\n分類：${item.category}\n${item.full_text}`
+  ).join('\n\n---\n\n');
+}
+
+// 自動根據輸入主題搜尋（在主題填寫後觸發）
+function autoSearchFromTopic() {
+  const topic = document.getElementById('mainContent')?.value?.trim();
+  if (!topic || !newsDatabase.length) return;
+  // 取前30字作為搜尋詞
+  document.getElementById('dbSearchInput').value = topic.substring(0, 30);
+  searchDb();
+  // 自動展開資料庫區塊
+  const body = document.getElementById('dbBody');
+  const arrow = document.getElementById('dbArrow');
+  if (!body.classList.contains('open')) {
+    body.classList.add('open');
+    arrow.textContent = '▲';
+  }
+}
+
 
 // ====== STATE ======
 const selectedUnit = '財政部高雄國稅局';
@@ -1333,7 +1395,12 @@ async function generatePressRelease() {
     chatMessages.push({ role: 'ai', text: '✅ 新聞稿已生成，請選擇標題並確認內容。可在下方輸入修改指示繼續優化。' });
     renderChatHistory();
   } catch(e) {
-    showToast('❌ API 呼叫失敗：' + (e.message || '請確認 API Key 及網路連線'));
+    if (e.message === '__SENT_TO_CLAUDE__') {
+      setLoading(false);
+      showClaudeSentNotice();
+      return;
+    }
+    showToast('❌ ' + (e.message || '發生錯誤，請重試'));
     console.error(e);
   }
 
@@ -1381,6 +1448,11 @@ function buildGeneratePrompt(main, ref, files) {
   let prompt = `## 新聞稿主題與內容\n${main}`;
   if (ref) prompt += `\n\n## 補充參考資料（含法條、NotebookLM 內容）\n${ref}`;
   if (files) prompt += `\n\n## 上傳附件內容\n${files}`;
+  // 加入資料庫選定範本
+  const dbContext = getSelectedDbContext();
+  if (dbContext) {
+    prompt += `\n\n## 資料庫參考範本（請參考以下新聞稿的寫作風格與結構）\n${dbContext}`;
+  }
   prompt += `\n\n請依照系統指示，生成完整新聞稿，包含5個標題選項與正文。`;
   return prompt;
 }
@@ -1405,7 +1477,11 @@ async function sendRevision() {
     parseAndRender(result);
     chatMessages.push({ role: 'ai', text: '✅ 內容已依指示修改完成。' });
   } catch(e) {
-    chatMessages.push({ role: 'ai', text: '❌ 修改失敗：' + (e.message || '請稍後再試') });
+    if (e.message === '__SENT_TO_CLAUDE__') {
+      chatMessages.push({ role: 'ai', text: '✅ 修改指示已送出，請查看左側 Claude 對話框的回覆，複製後貼入右側內容區。' });
+    } else {
+      chatMessages.push({ role: 'ai', text: '❌ 修改失敗：' + (e.message || '請稍後再試') });
+    }
   }
 
   renderChatHistory();
@@ -1424,12 +1500,12 @@ function handleChatKey(e) {
   }
 }
 
-// ====== API CALL — Gemini with personal API Key ======
+// ====== API CALL — Gemini 2.0 Flash (GitHub Pages 版本) ======
 async function callGemini(apiKey, systemPrompt, userPrompt) {
   const key = getApiKey();
-  if (!key) {
+  if (!key || key === 'ADMIN_GEMINI_KEY_HERE') {
     showApiKeyModal();
-    throw new Error('請先設定您的個人 Gemini API Key');
+    throw new Error('請先設定 Gemini API Key');
   }
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
@@ -1446,17 +1522,17 @@ async function callGemini(apiKey, systemPrompt, userPrompt) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-  } catch (networkErr) {
-    throw new Error('網路連線失敗：' + networkErr.message);
+  } catch(e) {
+    throw new Error('網路連線失敗：' + e.message);
   }
 
   if (!resp.ok) {
-    let errMsg = 'HTTP ' + resp.status;
-    try { const e = await resp.json(); errMsg = e.error?.message || errMsg; } catch(e) {}
-    if (resp.status === 400) errMsg = 'API Key 格式錯誤 (400)，請重新設定';
-    if (resp.status === 403) errMsg = 'API Key 無效或已被停用 (403)，請重新申請';
-    if (resp.status === 429) errMsg = '已達每日免費配額上限 (429)，請明天再試';
-    throw new Error(errMsg);
+    let msg = 'HTTP ' + resp.status;
+    try { const e = await resp.json(); msg = e.error?.message || msg; } catch(e) {}
+    if (resp.status === 400) msg = 'API Key 格式錯誤 (400)，請重新設定';
+    if (resp.status === 403) msg = 'API Key 無效或已被停用 (403)，請重新申請';
+    if (resp.status === 429) msg = '已達每日免費配額上限 (429)，請明天再試';
+    throw new Error(msg);
   }
 
   const data = await resp.json();
@@ -1580,6 +1656,62 @@ function setLoading(show, text='') {
   sendBtn.disabled = show;
   overlay.classList.toggle('show', show);
   if (text) document.getElementById('loadingText').textContent = text;
+}
+
+
+// ====== CLAUDE SENT NOTICE ======
+function showClaudeSentNotice() {
+  // 清空 loading
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) overlay.classList.remove('show');
+
+  // 顯示提示在右側標題區
+  const titleArea = document.getElementById('titleArea');
+  if (titleArea) {
+    titleArea.innerHTML = `
+      <div style="background:linear-gradient(135deg,#f5e9cc,#fff8ed);
+        border:1.5px solid var(--accent-light);border-radius:10px;
+        padding:16px 20px;text-align:center;">
+        <div style="font-size:20px;margin-bottom:8px;">💬</div>
+        <div style="font-family:'Noto Serif TC',serif;font-size:14px;
+          font-weight:700;color:var(--accent-dark);margin-bottom:6px;">
+          Prompt 已送出給 Claude！
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.7;">
+          請查看<strong>左側對話框</strong>，Claude 正在回覆新聞稿內容。<br>
+          回覆完成後，<strong>複製新聞稿文字</strong>，<br>
+          再點下方「✏️ 手動編輯」貼入右側內容區。
+        </div>
+        <button onclick="activateManualMode()"
+          style="margin-top:12px;background:var(--accent-dark);color:#fff;
+            border:none;border-radius:8px;padding:8px 20px;font-size:13px;
+            font-family:'Noto Sans TC',sans-serif;cursor:pointer;">
+          ✏️ 點此開啟手動貼入模式
+        </button>
+      </div>
+    `;
+  }
+
+  // 顯示 toast
+  showToast('✅ 已送出給 Claude，請查看左側對話框');
+
+  // Add to chat history
+  chatMessages.push({ role: 'user', text: '（新聞稿生成請求已送出）' });
+  chatMessages.push({ role: 'ai', text: '✅ Prompt 已送至 Claude 對話框，請查看左側回覆，複製後點「手動編輯」貼入右側。' });
+  renderChatHistory();
+}
+
+function activateManualMode() {
+  // Auto-enable manual edit mode
+  isEditable = true;
+  const display = document.getElementById('contentDisplay');
+  if (display) {
+    display.contentEditable = 'true';
+    display.classList.add('editable');
+    display.innerHTML = '<div style="color:var(--text-faint);font-style:italic;font-size:13px;padding:10px 0;">請將左側 Claude 對話中的新聞稿內容複製貼入此處...</div>';
+    display.focus();
+  }
+  showToast('✏️ 手動編輯模式已開啟，請貼上 Claude 的回覆');
 }
 
 // ====== TOAST ======
