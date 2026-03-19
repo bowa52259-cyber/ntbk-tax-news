@@ -744,7 +744,7 @@
     <span class="status-dot"></span>
     <span>系統就緒</span>
     &nbsp;|&nbsp;
-    <span id="modelLabel">Gemini 2.0 Flash · 新聞稿AI</span>
+    <span id="modelLabel">Claude Sonnet 4 · 新聞稿AI</span>
   </div>
 </header>
 
@@ -948,16 +948,10 @@
 // ====== SITE CONFIG ======
 const SITE_CONFIG = {
   siteName: '財政部高雄國稅局新聞稿AI生成系統',
-  version: '6.0',
-  // ─────────────────────────────────────────────────────
-  // 使用說明：
-  // 此 HTML 使用 Anthropic API，在 claude.ai 環境中已預授權
-  // 任何擁有 Claude 帳號的使用者，上傳此 HTML 即可直接使用
-  // 不需要 API Key、不需要 Google 登入、不需要任何額外設定
-  // ─────────────────────────────────────────────────────
+  version: '7.0'
 };
 
-// 頁面載入後直接初始化，不需要任何驗證流程
+// 頁面載入後直接初始化，不需要任何驗證或 API Key 設定
 window.addEventListener('DOMContentLoaded', () => {
   updateKeyStatus();
   loadNewsDatabase();
@@ -1500,19 +1494,14 @@ function handleChatKey(e) {
   }
 }
 
-// ====== API CALL — Gemini 2.0 Flash (GitHub Pages 版本) ======
+// ====== API CALL — Anthropic Claude Sonnet 4 ======
 async function callGemini(apiKey, systemPrompt, userPrompt) {
-  const key = getApiKey();
-  if (!key || key === 'ADMIN_GEMINI_KEY_HERE') {
-    showApiKeyModal();
-    throw new Error('請先設定 Gemini API Key');
-  }
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+  const url = 'https://api.anthropic.com/v1/messages';
   const body = {
-    system_instruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
-    generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 4096,
+    system: systemPrompt,
+    messages: [{ role: 'user', content: userPrompt }]
   };
 
   let resp;
@@ -1529,14 +1518,14 @@ async function callGemini(apiKey, systemPrompt, userPrompt) {
   if (!resp.ok) {
     let msg = 'HTTP ' + resp.status;
     try { const e = await resp.json(); msg = e.error?.message || msg; } catch(e) {}
-    if (resp.status === 400) msg = 'API Key 格式錯誤 (400)，請重新設定';
-    if (resp.status === 403) msg = 'API Key 無效或已被停用 (403)，請重新申請';
-    if (resp.status === 429) msg = '已達每日免費配額上限 (429)，請明天再試';
+    if (resp.status === 401) msg = '認證失敗（401）：請確認在 claude.ai 中開啟此系統';
+    if (resp.status === 429) msg = '請求過頻（429）：請稍後再試';
+    if (resp.status === 529) msg = '服務繁忙（529）：請稍後再試';
     throw new Error(msg);
   }
 
   const data = await resp.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  return data.content?.[0]?.text || '';
 }
 
 // ====== PARSE & RENDER ======
